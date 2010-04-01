@@ -1,0 +1,33 @@
+#! /bin/sh
+FJ_HOME=`pwd`
+
+ORIG_GEM_HOME=$GEM_HOME
+ORIG_GEM_PATH=$GEM_PATH
+
+GEM_HOME="$FJ_HOME/gems"
+GEM_PATH="$FJ_HOME/gems"
+
+echo "GEM_HOME: $GEM_HOME"
+echo "GEM_PATH: $GEM_PATH"
+echo "FJ_HOME:  $FJ_HOME"
+
+current_index_dir="$FJ_HOME/gem_index"
+old_index_dir="$FJ_HOME/gem_index.old"
+new_index_dir="$FJ_HOME/gem_index.new"
+
+rm -r $new_index_dir
+mkdir -p "$current_index_dir"
+mkdir -p "$new_index_dir/gems"
+
+cp -r $GEM_HOME/cache/*.gem "$new_index_dir/gems"
+
+gem_command="gem generate_index -d $new_index_dir"
+echo "Executing: $gem_command"
+$gem_command
+
+rm -r $old_index_dir
+mv $current_index_dir $old_index_dir
+mv $new_index_dir $current_index_dir
+
+GEM_HOME=$ORIG_GEM_HOME
+GEM_PATH=$ORIG_GEM_PATH
