@@ -1,0 +1,33 @@
+#! /bin/sh
+FJ_HOME=`pwd`
+
+ORIG_GEM_HOME=$GEM_HOME
+ORIG_GEM_PATH=$GEM_PATH
+
+GEM_HOME="$FJ_HOME/gems"
+GEM_PATH="$FJ_HOME/gems"
+
+mkdir -p "$GEM_HOME"
+
+echo "GEM_HOME: $GEM_HOME"
+echo "GEM_PATH: $GEM_PATH"
+echo "FJ_HOME:  $FJ_HOME"
+
+if [ $# -lt 2 ]
+then
+  echo Usage: $0 [repo url] [clone_name] 
+else
+  rm -rf builder/$2
+  git_command="git clone $1 builder/$2"
+  echo "Executing: $git_command"
+  $git_command
+
+  cd builder/$2
+  rake_command="rake install"
+  echo "Executing: $rake_command"
+  $rake_command
+  cd $FJ_HOME
+
+  GEM_HOME=$ORIG_GEM_HOME
+  GEM_PATH=$ORIG_GEM_PATH
+fi

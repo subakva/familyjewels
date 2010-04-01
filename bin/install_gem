@@ -1,18 +1,19 @@
 #! /bin/sh
-fj_home=`pwd`
+FJ_HOME=`pwd`
 
 ORIG_GEM_HOME=$GEM_HOME
 ORIG_GEM_PATH=$GEM_PATH
 
-GEM_HOME="$fj_home/gems"
-GEM_PATH="$fj_home/gems"
+GEM_HOME="$FJ_HOME/gems"
+GEM_PATH="$FJ_HOME/gems"
 
 mkdir -p "$GEM_HOME"
 
 echo "GEM_HOME: $GEM_HOME"
 echo "GEM_PATH: $GEM_PATH"
-echo "Executing: gem install $*"
+echo "FJ_HOME:  $FJ_HOME"
 
+echo "Executing: gem install $*"
 gem install $*
 
 GEM_HOME=$ORIG_GEM_HOME

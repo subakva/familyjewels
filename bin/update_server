@@ -7,6 +7,8 @@ ORIG_GEM_PATH=$GEM_PATH
 GEM_HOME="$FJ_HOME/gems"
 GEM_PATH="$FJ_HOME/gems"
 
+mkdir -p "$GEM_HOME"
+
 echo "GEM_HOME: $GEM_HOME"
 echo "GEM_PATH: $GEM_PATH"
 echo "FJ_HOME:  $FJ_HOME"

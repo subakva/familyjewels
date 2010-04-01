@@ -32,4 +32,7 @@ Requirements
 ----------
 
 * RubyGems must be installed. I'm using 1.3.6, but it may work with other versions.
-* The "builder" gem must be installed in the local gem cache in order to generate the index. Run: bin/install_gem builder
+* The "builder" gem must be installed in the local gem cache in order to generate the index. Run:
+    bin/install_gem builder
+* The "rake" gem must be installed in the local gem cache in order to install gems. Run:
+    bin/install_gem rake
