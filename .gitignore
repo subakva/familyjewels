@@ -1,6 +1,8 @@
+.rvmrc
 gems
 gem_index
 gem_index.old
 gem_index.new
 *.tmproj
 builder/*
+config/jewels.yml

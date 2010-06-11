@@ -9,9 +9,11 @@ GEM_PATH="$FJ_HOME/gems"
 
 mkdir -p "$GEM_HOME"
 
+echo
 echo "GEM_HOME: $GEM_HOME"
 echo "GEM_PATH: $GEM_PATH"
 echo "FJ_HOME:  $FJ_HOME"
+echo
 
 echo "Executing: gem install $*"
 gem install $*

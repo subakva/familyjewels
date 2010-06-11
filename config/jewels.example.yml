@@ -1,0 +1,11 @@
+--- 
+gems_to_install:
+  - rake
+  - builder
+  - jeweler --version=1.4.0
+gems_to_build:
+  secret_gem-master:
+    repo: git@github.com:kgb/secret_gem.git
+  secret_gem-staging:
+    repo: git@github.com:kgb/secret_gem.git
+    branch: staging

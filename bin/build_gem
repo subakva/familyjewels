@@ -9,13 +9,19 @@ GEM_PATH="$FJ_HOME/gems"
 
 mkdir -p "$GEM_HOME"
 
+echo
 echo "GEM_HOME: $GEM_HOME"
 echo "GEM_PATH: $GEM_PATH"
 echo "FJ_HOME:  $FJ_HOME"
+echo
 
-if [ $# -lt 2 ]
+export SUDOLESS=true
+
+GEMTRONICS="$GEM_HOME/bin/gemtronics"
+
+if [ $# -lt 3 ]
 then
-  echo Usage: $0 [repo url] [clone_name] 
+  echo Usage: $0 [repo url] [clone_name] [branch_name]
 else
   rm -rf builder/$2
   git_command="git clone $1 builder/$2"
@@ -23,6 +29,18 @@ else
   $git_command
 
   cd builder/$2
+
+  branch_command="git checkout -b $3 origin/$3"
+  echo "Executing: $branch_command"
+  $branch_command
+
+  if [ -e $GEMTRONICS ]
+  then
+    gemtronics_command="$GEMTRONICS install"
+    echo "Executing: $gemtronics_command"
+    $gemtronics_command
+  fi
+
   rake_command="rake install"
   echo "Executing: $rake_command"
   $rake_command
