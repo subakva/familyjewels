@@ -1,0 +1,16 @@
+#! /usr/bin/env ruby
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+
+require 'family_jewels'
+
+FamilyJewels::Project.register(
+	:verbose 	  	=> true,
+	:clone_url    	=> 'git@github.com:secondrotation/useragent.git',
+	:project_name 	=> 'secondrotation-useragent',
+	:branch_name    => 'master',
+	:builder_name 	=> 'secondrotation-useragent'
+)
+
+FamilyJewels::Project.all.each do |project|
+  project.build
+end
