@@ -1,4 +1,6 @@
-bin/stage
+stage
+test_repos
+gems
 *.sublime*
 *.gem
 .bundle
