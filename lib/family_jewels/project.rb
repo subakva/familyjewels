@@ -124,6 +124,8 @@ module FamilyJewels
 				puts "======================================================================"
 
 				FileUtils.cd(self.clone_dir) do
+					# TODO: Figure out why the output from the bundle command isn't showing
+					# "bundle install --path #{Config.gems_dir} 2>&1" ?
 					run_command("bundle install --path #{Config.gems_dir}")
 				end
 			end
