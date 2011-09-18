@@ -157,8 +157,7 @@ module FamilyJewels
 				puts "======================================================================"
 
 				FileUtils.cd(self.clone_dir) do
-					# TODO: Change the environment so that the gem is intalled into Config.gems_dir
-					# run_command("GEM_HOME=#{Config.gems_dir} GEM_PATH=#{Config.gems_dir} ruby -e 'puts ENV[\"GEM_HOME\"]'")
+					# TODO: Make this work with other versions of Ruby
 					gem_home = "#{Config.gems_dir}/ruby/1.8"
 					gem_path = gem_home
 					rake_path = "#{gem_home}/bin/rake"
@@ -216,9 +215,6 @@ module FamilyJewels
 					puts
 					puts output
 					puts
-					# output.split("\n").each do |line|
-					# 	puts "    #{line}"
-					# end
 				end
 				raise "Command Failed: #{command}"
 			end
