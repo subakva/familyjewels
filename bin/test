@@ -3,16 +3,17 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 require 'family_jewels'
 
-FamilyJewels::Project.register(
+config = FamilyJewels::Config.new(:verbose => true)
+config.register(
 	:verbose 	  		=> true,
 	:clone_url    	=> 'git@github.com:subakva/familyjewels-test.git'
 )
-FamilyJewels::Project.register(
+config.register(
 	:verbose 	  		=> true,
 	:clone_url    	=> 'git@github.com:subakva/familyjewels-test.git',
 	:branch_name    => 'experiment'
 )
 
-FamilyJewels::Project.all.each do |project|
+config.all.each do |project|
   project.build
 end

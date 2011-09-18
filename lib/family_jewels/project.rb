@@ -13,7 +13,7 @@ module FamilyJewels
 			:install_task => 'install'
 		}
 
-		attr_accessor :clone_url, :branch_name, :project_name, :builder_name, :verbose, :remote_name, :install_task
+		attr_accessor :clone_url, :branch_name, :project_name, :builder_name, :verbose, :remote_name, :install_task, :config
 
 		# Create a new Project.
 		#
@@ -25,13 +25,15 @@ module FamilyJewels
 		#   :install_task	- The name of the rake task used to install the project as a gem
 		#   :verbose      - Enable verbose output
 		#
-		def initialize(attributes = nil)
+		def initialize(config, attributes = nil)
 			attributes ||= {}
 			attributes = DEFAULTS.merge(attributes)
 
-			raise ArgumentError.new(":clone_url is a required attribute.") unless attributes.has_key?(:clone_url)
-			raise ArgumentError.new(":branch_name is a required attribute.") unless attributes.has_key?(:branch_name)
+			raise ArgumentError.new("A configuration instance is required.") unless config
+			raise ArgumentError.new(":clone_url is a required attribute.") unless attributes[:clone_url]
+			raise ArgumentError.new(":branch_name is a required attribute.") unless attributes[:branch_name]
 
+			self.config       = config
 			self.verbose      = attributes[:verbose]
 			self.clone_url    = attributes[:clone_url]
 			self.remote_name  = attributes[:remote_name]
@@ -42,7 +44,7 @@ module FamilyJewels
 		end
 
 		def clone_dir
-			File.join(Config.stage_dir, self.builder_name)
+			File.join(config.stage_dir, self.builder_name)
 		end
 
 		# Returns true if the project has already been cloned
@@ -104,11 +106,16 @@ module FamilyJewels
 			return false unless self.install_task && has_rakefile?
 			has_task = false
 			FileUtils.cd(self.clone_dir) do
-				run_command("rake -T #{self.install_task}") do |output|
+				# run_command("#{rake_bin} -T #{self.install_task}") do |output|
+				run_command("bundle exec rake -T #{self.install_task}") do |output|
 					has_task = (output =~ Regexp.new("rake #{self.install_task}"))
 				end
 			end
 			has_task
+		end
+
+		def rake_bin
+			"#{config.gems_dir}/ruby/1.8/bin/rake"
 		end
 
 		# Processes the project, installing gems to be indexed as required.
@@ -146,8 +153,8 @@ module FamilyJewels
 
 				FileUtils.cd(self.clone_dir) do
 					# TODO: Figure out why the output from the bundle command isn't showing
-					# "bundle install --path #{Config.gems_dir} 2>&1" ?
-					run_command("bundle install --path #{Config.gems_dir}")
+					# "bundle install --path #{config.gems_dir} 2>&1" ?
+					run_command("bundle install --path #{config.gems_dir}")
 				end
 			end
 
@@ -158,7 +165,7 @@ module FamilyJewels
 
 				FileUtils.cd(self.clone_dir) do
 					# TODO: Make this work with other versions of Ruby
-					gem_home = "#{Config.gems_dir}/ruby/1.8"
+					gem_home = "#{config.gems_dir}/ruby/1.8"
 					gem_path = gem_home
 					rake_path = "#{gem_home}/bin/rake"
 
@@ -219,21 +226,6 @@ module FamilyJewels
 				raise "Command Failed: #{command}"
 			end
 			return successful
-		end
-
-		class << self
-			# TODO: Move to Config
-			def register(*args)
-				@projects ||= []
-				project = FamilyJewels::Project.new(*args)
-				@projects << project
-				puts " => Registered #{project.builder_name}" if project.verbose
-				project
-			end
-
-			def all
-				(@projects || []).dup
-			end
 		end
 	end
 end
