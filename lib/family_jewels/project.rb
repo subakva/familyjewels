@@ -9,18 +9,20 @@ module FamilyJewels
 
 		DEFAULTS = {
 			:remote_name  => 'origin',
-			:branch_name  => 'master'
+			:branch_name  => 'master',
+			:install_task => 'install'
 		}
 
-		attr_accessor :clone_url, :branch_name, :project_name, :builder_name, :verbose, :remote_name
+		attr_accessor :clone_url, :branch_name, :project_name, :builder_name, :verbose, :remote_name, :install_task
 
 		# Create a new Project.
 		#
-		# * :clone_url 		- The URL to use to clone the git repository
-		#   :remote_name  - The name of the git remote origin [default: origin]
-		#   :branch_name 	- The name of the git branch to build [default: master]
-		#   :project_name - The name of the project ( eg. srbase )
-		#   :builder_name - The name for this build of the project ( eg. srbase-master )
+		# * :clone_url		- The URL to use to clone the git repository
+		#   :remote_name	- The name of the git remote origin [default: origin]
+		#   :branch_name	- The name of the git branch to build [default: master]
+		#   :project_name	- The name of the project ( eg. srbase )
+		#   :builder_name	- The name for this build of the project ( eg. srbase-master )
+		#   :install_task	- The name of the rake task used to install the project as a gem
 		#   :verbose      - Enable verbose output
 		#
 		def initialize(attributes = nil)
@@ -30,10 +32,11 @@ module FamilyJewels
 			raise ArgumentError.new(":clone_url is a required attribute.") unless attributes.has_key?(:clone_url)
 			raise ArgumentError.new(":branch_name is a required attribute.") unless attributes.has_key?(:branch_name)
 
-			self.verbose 		  = attributes[:verbose]
-			self.clone_url 		= attributes[:clone_url]
-			self.remote_name 	= attributes[:remote_name]
-			self.branch_name 	= attributes[:branch_name]
+			self.verbose      = attributes[:verbose]
+			self.clone_url    = attributes[:clone_url]
+			self.remote_name  = attributes[:remote_name]
+			self.branch_name  = attributes[:branch_name]
+			self.install_task = attributes[:install_task]
 			self.project_name = attributes[:project_name] || parse_project_name(clone_url)
 			self.builder_name = attributes[:builder_name] || "#{self.project_name}-#{self.branch_name}"
 		end
@@ -82,17 +85,35 @@ module FamilyJewels
 			false
 		end
 
+		# Returns true if the project has a file with the specified name
+		def has_file?(filename)
+			File.exists?(File.join(self.clone_dir, filename))
+		end
+
 		# Returns true if the project has a Gemfile
 		def has_gemfile?
-			File.exists?(File.join(self.clone_dir, 'Gemfile'))
+			has_file?('Gemfile')
+		end
+
+		# Returns true if the project has a Rakefile
+		def has_rakefile?
+			has_file?('Rakefile')
 		end
 
 		def has_install_task?
-			false
+			return false unless self.install_task && has_rakefile?
+			has_task = false
+			FileUtils.cd(self.clone_dir) do
+				run_command("rake -T #{self.install_task}") do |output|
+					has_task = (output =~ Regexp.new("rake #{self.install_task}"))
+				end
+			end
+			has_task
 		end
 
 		# Processes the project, installing gems to be indexed as required.
 		def build(options = nil)
+			# TODO: Extract into Builder
 
 			puts "\n======================================================================"
 			puts "=> Building: #{self.builder_name}"
@@ -137,7 +158,15 @@ module FamilyJewels
 
 				FileUtils.cd(self.clone_dir) do
 					# TODO: Change the environment so that the gem is intalled into Config.gems_dir
-					run_command('rake install')
+					# run_command("GEM_HOME=#{Config.gems_dir} GEM_PATH=#{Config.gems_dir} ruby -e 'puts ENV[\"GEM_HOME\"]'")
+					gem_home = "#{Config.gems_dir}/ruby/1.8"
+					gem_path = gem_home
+					rake_path = "#{gem_home}/bin/rake"
+
+					unless File.exists?(File.join(gem_home, 'bin', 'bundle'))
+						run_command("GEM_HOME=#{gem_home} GEM_PATH=#{gem_path} gem install bundler")
+					end
+					run_command("GEM_HOME=#{gem_home} GEM_PATH=#{gem_path} #{rake_path} install")
 				end
 			end
 
@@ -149,10 +178,11 @@ module FamilyJewels
 		def print_attributes
 			puts "=>  - verbose      : #{self.verbose}"
 			puts "=>  - clone_url    : #{self.clone_url}"
-			puts "=>  - remote_name	 : #{self.remote_name}"
-			puts "=>  - branch_name	 : #{self.branch_name}"
+			puts "=>  - remote_name  : #{self.remote_name}"
+			puts "=>  - branch_name  : #{self.branch_name}"
 			puts "=>  - project_name : #{self.project_name}"
 			puts "=>  - builder_name : #{self.builder_name}"
+			puts "=>  - install_task : #{self.install_task}"
 		end
 
 		def parse_project_name(git_url)
@@ -165,16 +195,33 @@ module FamilyJewels
 				puts
 			end
 
-			output = `#{command}`
+			output = `#{command} 2>&1`
+			# output = `#{command}`
 			successful = ($?.exitstatus == 0)
 
 			if self.verbose
+				puts output
 				puts
 				puts "=> Success?: #{successful}"
 			end
 
 			yield(output) if block_given? && successful
 
+			# TODO: What is the best way to handle errors? Skip the failed project and move on to the next?
+			unless successful
+				puts "=> Cammand Failed: #{command}"
+				puts "=> #{$?.inspect}"
+				unless self.verbose
+					puts "=> Output:"
+					puts
+					puts output
+					puts
+					# output.split("\n").each do |line|
+					# 	puts "    #{line}"
+					# end
+				end
+				raise "Command Failed: #{command}"
+			end
 			return successful
 		end
 
