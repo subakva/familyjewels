@@ -1,15 +1,15 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "familyjewels/version"
+require "family_jewels/version"
 
 Gem::Specification.new do |s|
   s.name        = "familyjewels"
-  s.version     = Familyjewels::VERSION
+  s.version     = FamilyJewels::VERSION
   s.authors     = ["Jason Wadsworth"]
   s.email       = ["jdwadsworth@gmail.com"]
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.homepage    = "http://github.com/subakva/familyjewels"
+  s.summary     = %q{Build Private Gems}
+  s.description = %q{Tools for building and publishing private and customized Ruby gems}
 
   s.rubyforge_project = "familyjewels"
 
@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   # specify any dependencies here; for example:
-  # s.add_development_dependency "rspec"
-  # s.add_runtime_dependency "rest-client"
+  s.add_development_dependency "rspec"
+  s.add_runtime_dependency "bundler", "~> 1.0.0"
 end

@@ -4,6 +4,7 @@ Project To Do List
 Next Up
 ----------
 
+* Write automated tests to confirm functionality
 * Add tasks for cleanly re-generating indexes
 * Test installation build with real-world configuration
 * Refactor Project#build into Builder class
