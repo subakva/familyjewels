@@ -10,7 +10,7 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 RSpec.configure do |config|
   include FamilyJewelsSpecHelper
 
-  config.after(:each) do
-    FileUtils.rm_rf('tmp/spec') if File.exists?('tmp/spec')
-  end
+  # config.after(:suite) do
+  #   FileUtils.rm_rf('tmp/integration') if File.exists?('tmp/spec')
+  # end
 end
