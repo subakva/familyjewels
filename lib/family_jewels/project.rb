@@ -13,7 +13,10 @@ module FamilyJewels
 			:install_task => 'install'
 		}
 
-		attr_accessor :clone_url, :branch_name, :project_name, :builder_name, :verbose, :remote_name, :install_task, :config
+		attr_accessor :clone_url, :branch_name, :remote_name
+		attr_accessor :project_name, :builder_name
+		attr_accessor :verbose, :config
+		attr_accessor :install_task, :dependencies
 
 		# Create a new Project.
 		#
@@ -41,6 +44,7 @@ module FamilyJewels
 			self.install_task = attributes[:install_task]
 			self.project_name = attributes[:project_name] || parse_project_name(clone_url)
 			self.builder_name = attributes[:builder_name] || "#{self.project_name}-#{self.branch_name}"
+			self.dependencies = attributes[:dependencies] || {}
 		end
 
 		def clone_dir
@@ -106,17 +110,20 @@ module FamilyJewels
 			return false unless self.install_task && has_rakefile?
 			has_task = false
 			FileUtils.cd(self.clone_dir) do
-				# run_command("#{rake_bin} -T #{self.install_task}") do |output|
-				run_command("bundle exec rake -T #{self.install_task}") do |output|
+				run_rake("-T #{self.install_task} --trace") do |output|
 					has_task = (output =~ Regexp.new("rake #{self.install_task}"))
 				end
+				# # run_command("#{rake_bin} -T #{self.install_task}") do |output|
+				# run_command("bundle exec rake -T #{self.install_task} --trace") do |output|
+				# 	has_task = (output =~ Regexp.new("rake #{self.install_task}"))
+				# end
 			end
 			has_task
 		end
 
-		def rake_bin
-			"#{config.gems_dir}/ruby/1.8/bin/rake"
-		end
+		# def rake_bin
+		# 	"#{config.gems_dir}/ruby/1.8/bin/rake"
+		# end
 
 		# Processes the project, installing gems to be indexed as required.
 		def build(options = nil)
@@ -146,14 +153,42 @@ module FamilyJewels
 				self.clone!
 			end
 
+			# if self.dependencies.size > 0
+			# 	puts "\n======================================================================"
+			# 	puts "=> Installing Dependencies (Configured)"
+			# 	puts "======================================================================"
+			# 	self.dependencies.each do |gem_name, gem_version|
+			# 		gem_home = "#{config.gems_dir}/ruby/1.8"
+			# 		gem_path = gem_home
+			# 		run_command("GEM_HOME=#{gem_home} GEM_PATH=#{gem_path} gem install #{gem_name} -v=#{gem_version}")
+			# 	end
+			# end
+
+			# Add default dependencies
+			if self.has_gemfile? && !self.dependencies['bundler']
+				self.dependencies['bundler'] = nil
+			end
+
+			if self.dependencies.size > 0
+				puts "\n======================================================================"
+				puts "=> Installing Build Dependencies"
+				puts "======================================================================"
+
+				self.dependencies.each do |gem_name, gem_version|
+					gem_install_cmd = "gem install #{gem_name}"
+					gem_install_cmd << " -v=#{gem_version}" if gem_version
+					run_with_gem_env(gem_install_cmd)
+				end
+			end
+
 			if self.has_gemfile? && options[:install_dependencies]
 				puts "\n======================================================================"
-				puts "=> Installing Dependencies"
+				puts "=> Installing Gemfile Dependencies"
 				puts "======================================================================"
 
 				FileUtils.cd(self.clone_dir) do
 					# TODO: Figure out why the output from the bundle command isn't showing
-					# "bundle install --path #{config.gems_dir} 2>&1" ?
+					# 			"bundle install --path #{config.gems_dir} 2>&1" ?
 					run_command("bundle install --path #{config.gems_dir}")
 				end
 			end
@@ -164,15 +199,7 @@ module FamilyJewels
 				puts "======================================================================"
 
 				FileUtils.cd(self.clone_dir) do
-					# TODO: Make this work with other versions of Ruby
-					gem_home = "#{config.gems_dir}/ruby/1.8"
-					gem_path = gem_home
-					rake_path = "#{gem_home}/bin/rake"
-
-					unless File.exists?(File.join(gem_home, 'bin', 'bundle'))
-						run_command("GEM_HOME=#{gem_home} GEM_PATH=#{gem_path} gem install bundler")
-					end
-					run_command("GEM_HOME=#{gem_home} GEM_PATH=#{gem_path} #{rake_path} install")
+					run_rake('install --trace')
 				end
 			end
 
@@ -189,10 +216,31 @@ module FamilyJewels
 			puts "=>  - project_name : #{self.project_name}"
 			puts "=>  - builder_name : #{self.builder_name}"
 			puts "=>  - install_task : #{self.install_task}"
+			puts "=>  - dependencies : #{self.dependencies.inspect}"
+		end
+
+		def gem_home
+			"#{config.gems_dir}/ruby/1.8"
 		end
 
 		def parse_project_name(git_url)
 			git_url.match(/^.*\/(.*)\.git$/)[1]
+		end
+
+		def run_rake(command, &block)
+			if self.has_gemfile?
+				rake_cmd = "#{gem_home}/bin/bundle exec rake"
+			else
+				rake_cmd = "#{gem_home}/bin/rake"
+			end
+			run_with_gem_env("#{rake_cmd} #{command}", &block)
+		end
+
+		def run_with_gem_env(command, &block)
+			# TODO: Make this work with other versions of Ruby
+			gem_path = gem_home
+			gem_env = "GEM_HOME=#{gem_home} GEM_PATH=#{gem_path}"
+			run_command("#{gem_env} #{command}", &block)
 		end
 
 		def run_command(command, &block)

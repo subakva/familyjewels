@@ -96,7 +96,7 @@ describe FamilyJewels::Config do
       :project_name   => 'fjt'
     )
 
-    config.get('fjt').should == project
+    config.get('fjt-master').should == project
   end
 
   it 'sets the config on the project' do

@@ -19,14 +19,14 @@ module FamilyJewels
 			project = FamilyJewels::Project.new(self, project_attributes)
 
 			@projects ||= {}
-			@projects[project.project_name] = project
+			@projects[project.builder_name] = project
 			puts " => Registered #{project.builder_name}" if self.verbose
 			project
 		end
 
-		def get(project_name)
+		def get(builder_name)
 			@projects ||= {}
-			@projects[project_name]
+			@projects[builder_name]
 		end
 
 		def filter(&block)

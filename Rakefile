@@ -3,8 +3,8 @@ require "bundler/gem_tasks"
 require 'rspec/core/rake_task'
 
 desc "Run integration examples"
-RSpec::Core::RakeTask.new(:integration) do |t|
-  t.pattern = './integration/**/*_spec.rb'
+task :integration do
+  puts "Run: integration/bin/test"
 end
 
 desc "Run all examples"

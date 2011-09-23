@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require 'family_jewels/cli/app'
+
+FamilyJewels::CLI::App.start
